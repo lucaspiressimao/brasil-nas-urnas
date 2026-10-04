@@ -41,7 +41,7 @@ function nationalRanking(d){
   const projectedPct=projection?100*(projection.votes[c.n]??0)/projection.valid:null;
   estimate.textContent='Projeção final: '+pct(projectedPct);
   estimate.title=projection?'Estimativa: em cada UF e no exterior, divide os votos atuais pela fração de seções totalizadas e soma os valores. Mantém a distribuição dos votos e a média de votos válidos por seção de cada região; as urnas restantes podem ter perfil diferente. Não é resultado oficial nem previsão estatística.':'Projeção indisponível: todas as 27 UFs e o exterior precisam ter dados e ao menos uma seção totalizada.';
-  card.append(top,name,value,votes,estimate,track(c.pct,color));summary.append(card);
+  card.append(top,name,value,votes,estimate);summary.append(card);
  }
  const count=document.createElement('article');count.className='count';const title=document.createElement('div');title.className='card-top';title.textContent='APURAÇÃO NACIONAL';
  const label=document.createElement('h2');label.textContent='Urnas apuradas';const value=document.createElement('strong');value.textContent=pct(d?.count??null);
