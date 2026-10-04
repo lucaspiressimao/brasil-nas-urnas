@@ -4,23 +4,46 @@ let data={},selected='SP',busy=false;
 const number=v=>v===null||v===undefined||v===''?null:Number(String(v).replace(',','.'));
 const pct=v=>v===null?'—':new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)+'%';
 const integer=v=>new Intl.NumberFormat('pt-BR').format(v);
+const candidateColors={'13':'#d94950','22':'#3474c5','55':'#8056b2','70':'#269b88','14':'#c27924','30':'#a47a3c'};
+function displayName(candidate){
+ if(candidate.n==='13')return 'Lula';if(candidate.n==='22')return 'Flávio Bolsonaro';
+ return candidate.name.toLocaleLowerCase('pt-BR').replace(/(^|\s)\S/g,s=>s.toLocaleUpperCase('pt-BR'));
+}
 function parse(raw){
  const cargo=raw.carg?.find(c=>c.cd==='1');if(!cargo||!raw.s)throw Error('Formato de dados inesperado');
- const candidates=(cargo.agr||[]).flatMap(a=>(a.par||[]).flatMap(p=>p.cand||[]));
- const read=n=>{const c=candidates.find(c=>c.n===n);return c?{name:c.nmu,votes:number(c.vap),pct:number(c.pvap),precise:number(c.pvapn??c.pvap)}:null;};
- return {lula:read('13'),bolsonaro:read('22'),count:number(raw.s.pst),total:number(raw.s.ts),counted:number(raw.s.st),time:raw.dt+' '+raw.ht,date:raw.dt,final:raw.and==='f'};
+ const candidates=(cargo.agr||[]).flatMap(a=>(a.par||[]).flatMap(p=>(p.cand||[]).map(c=>({n:c.n,name:c.nmu,party:p.sg,votes:number(c.vap),pct:number(c.pvap)}))));
+ const ranking=candidates.slice().sort((a,b)=>b.votes-a.votes||Number(a.n)-Number(b.n)).slice(0,4);
+ return {ranking,lula:candidates.find(c=>c.n==='13')??null,bolsonaro:candidates.find(c=>c.n==='22')??null,count:number(raw.s.pst),total:number(raw.s.ts),counted:number(raw.s.st),time:raw.dt+' '+raw.ht,date:raw.dt,final:raw.and==='f'};
+}
+function track(value,color){const element=document.createElement('div');element.className='track';const bar=document.createElement('i');bar.style.width=(value??0)+'%';if(color)bar.style.background=color;element.append(bar);return element;}
+function nationalRanking(d){
+ const summary=$('national-summary');summary.replaceChildren();
+ if(!d){const empty=document.createElement('article');empty.textContent='Dados nacionais indisponíveis';summary.append(empty);}
+ for(const [position,c]of(d?.ranking??[]).entries()){
+  const color=candidateColors[c.n]??'#687e85';const card=document.createElement('article');card.className='ranking-card';card.style.setProperty('--candidate-color',color);
+  const top=document.createElement('div');top.className='card-top';top.textContent=`BRASIL · ${position+1}º · ${c.party} ${c.n}`;
+  const name=document.createElement('h2');name.textContent=displayName(c);const value=document.createElement('strong');value.textContent=pct(c.pct);
+  const votes=document.createElement('p');votes.textContent=integer(c.votes)+' votos válidos';card.append(top,name,value,votes,track(c.pct,color));summary.append(card);
+ }
+ const count=document.createElement('article');count.className='count';const title=document.createElement('div');title.className='card-top';title.textContent='APURAÇÃO NACIONAL';
+ const label=document.createElement('h2');label.textContent='Urnas apuradas';const value=document.createElement('strong');value.textContent=pct(d?.count??null);
+ const total=document.createElement('p');total.textContent=d?integer(d.counted)+' de '+integer(d.total)+' seções':'Dados indisponíveis';count.append(title,label,value,total,track(d?.count));summary.append(count);
 }
 function winner(d){if(!d?.lula||!d?.bolsonaro||d.lula.votes===d.bolsonaro.votes)return '';return d.lula.votes>d.bolsonaro.votes?'lula':'bolsonaro';}
 function draw(){
  const br=data.BR;
- for(const who of ['lula','bolsonaro']){const c=br?.[who];$(who+'-pct').textContent=pct(c?.pct??null);$(who+'-votes').textContent=c?integer(c.votes)+' votos válidos':'Candidato indisponível no TSE';$(who+'-bar').style.width=(c?.pct??0)+'%';if(c)$(who+'-name').textContent=who==='lula'?'Lula':'Flávio Bolsonaro';}
- $('count-pct').textContent=pct(br?.count??null);$('count-total').textContent=br?integer(br.counted)+' de '+integer(br.total)+' seções':'Aguardando TSE';$('count-bar').style.width=(br?.count??0)+'%';
+ nationalRanking(br);
  $('national-time').textContent=br?'TSE · Brasil: '+br.time+' (Brasília)':'Aguardando dados nacionais';
- document.querySelectorAll('[data-uf]').forEach(path=>{const uf=path.dataset.uf,d=data[uf];path.classList.remove('lula','bolsonaro','selected');const w=winner(d);if(w)path.classList.add(w);path.classList.toggle('selected',uf===selected);path.setAttribute('aria-label',`${names[uf]}. Lula ${pct(d?.lula?.pct??null)}. Flávio Bolsonaro ${pct(d?.bolsonaro?.pct??null)}. Urnas apuradas ${pct(d?.count??null)}.`);path.querySelector('title').textContent=path.getAttribute('aria-label');});
+ document.querySelectorAll('[data-uf]').forEach(path=>{const uf=path.dataset.uf,d=data[uf];path.classList.remove('lula','bolsonaro','selected');const w=winner(d);if(w)path.classList.add(w);path.classList.toggle('selected',uf===selected);path.setAttribute('aria-label',`${names[uf]}. ${(d?.ranking??[]).map((c,i)=>`${i+1}º: ${displayName(c)} ${pct(c.pct)}`).join('. ')}. Urnas apuradas ${pct(d?.count??null)}.`);path.querySelector('title').textContent=path.getAttribute('aria-label');});
  detail(selected);
 }
 function detail(uf){selected=uf;const d=data[uf];$('state-title').textContent=names[uf]+' · '+uf;$('state-meta').textContent=d?'TSE: '+d.time+' (Brasília)':'Dados indisponíveis nesta consulta';$('state-detail').replaceChildren();
- for(const [label,key,cls] of [['Lula','lula','red'],['Flávio Bolsonaro','bolsonaro','blue'],['Urnas apuradas','count','']]){const value=key==='count'?d?.count:d?.[key]?.pct;const box=document.createElement('div');box.className='result '+cls;const row=document.createElement('div'),name=document.createElement('span'),strong=document.createElement('strong');name.textContent=label;strong.textContent=pct(value??null);row.append(name,strong);const track=document.createElement('div');track.className='track';const bar=document.createElement('i');bar.style.width=(value??0)+'%';track.append(bar);box.append(row,track);$('state-detail').append(box);}
+ for(const [position,c]of(d?.ranking??[]).entries()){
+  const color=candidateColors[c.n]??'#687e85';const box=document.createElement('div');box.className='result';
+  const row=document.createElement('div'),label=document.createElement('span'),value=document.createElement('strong');label.textContent=`${position+1}º · ${displayName(c)}`;value.textContent=pct(c.pct);value.style.color=color;row.append(label,value);
+  const votes=document.createElement('p');votes.className='candidate-meta';votes.textContent=`${c.party} · ${c.n} · ${integer(c.votes)} votos`;box.append(row,votes,track(c.pct,color));$('state-detail').append(box);
+ }
+ const count=document.createElement('div');count.className='result state-count';const row=document.createElement('div'),label=document.createElement('span'),value=document.createElement('strong');label.textContent='Urnas apuradas';value.textContent=pct(d?.count??null);row.append(label,value);count.append(row,track(d?.count));$('state-detail').append(count);
  document.querySelectorAll('[data-uf]').forEach(p=>p.classList.toggle('selected',p.dataset.uf===uf));
 }
 async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;$('status').textContent='Consultando dados oficiais…';try{
