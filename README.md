@@ -15,3 +15,9 @@ Fonte: [Resultados TSE](https://resultados.tse.jus.br/oficial/app/index.html#/el
 Mapa: [malhas IBGE](https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo+json&qualidade=minima&intrarregiao=UF).
 
 Painel independente, sem vínculo com a Justiça Eleitoral. Resultados parciais não representam definição de vitória.
+
+## Projeção final
+
+Cada região (27 UFs e exterior) é extrapolada pela fração exata de seções totalizadas: votos projetados = votos atuais × seções totais ÷ seções totalizadas. Os votos de cada candidato são somados entre as regiões e divididos pela soma dos votos válidos projetados de todos os candidatos. Não se usa uma média simples dos percentuais estaduais ou apenas os quatro candidatos no denominador.
+
+O cálculo assume a mesma distribuição dos votos e a mesma média de votos válidos por seção nas urnas restantes de cada região. Não é resultado oficial, pesquisa ou previsão estatística. Fica indisponível quando uma região está sem dados ou sem seções totalizadas.
