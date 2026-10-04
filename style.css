@@ -18,3 +18,7 @@ main{max-width:1460px;padding:24px 34px}header h1{font-size:34px;margin:8px 0}he
 @media(min-width:1000px) and (min-height:620px){.summary article{padding:6px 12px}.summary h2{font-size:13px;line-height:1.1;margin:4px 0}.summary strong{font-size:24px;line-height:1.1}.summary p{font-size:10px;line-height:1.2;margin:3px 0}.summary .card-top{font-size:8px;line-height:1.2}.summary .track{display:none}}
 
 .summary .projection{font-size:11px;font-weight:700;color:var(--candidate-color,var(--ink));margin:5px 0 0;line-height:1.2;letter-spacing:0}.projection{cursor:help}@media(min-width:1000px) and (min-height:620px){.summary article{padding:5px 12px}.summary .projection{font-size:10px;margin:4px 0 0}.summary h2{margin:3px 0}.summary p{margin:2px 0}.summary strong{font-size:23px}}
+
+/* A barra representa o percentual atual de votos válidos, em todos os dispositivos. */
+.summary .track{display:block;flex-shrink:0;height:3px;margin-top:7px}
+@media(min-width:1000px) and (min-height:620px){.summary article{padding:5px 12px}.summary .track{margin-top:4px}.summary h2{margin:2px 0}.summary strong{font-size:22px}.summary p{margin:2px 0}.summary .projection{margin:3px 0 0}}
